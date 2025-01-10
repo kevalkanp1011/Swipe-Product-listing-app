@@ -34,6 +34,21 @@ This project allows users to:
 - **Build Tools**: Gradle
 - **Version Control**: Git
 
+## Screenshots
+
+| Screenshot 1 | Screenshot 2 | Screenshot 3 |
+|--------------|--------------|--------------|
+| ![Screenshot 1](https://drive.google.com/uc?id=1QXF-xe-LQGOowiam97_wbjiEzXou0Igd) | ![Screenshot 2](https://drive.google.com/uc?id=1QaZFlt8stsl6og9gOmpz6k4rAWaS17la) | ![Screenshot 3](https://drive.google.com/uc?id=1Qf8LZFiDIeV4eJTThBzO2zyBTuhEnLvv) |
+
+| Screenshot 4 | Screenshot 5 | Screenshot 6 |
+|--------------|--------------|--------------|
+| ![Screenshot 4](https://drive.google.com/uc?id=1Qpy4wlnw_FFn5ziWgLqmdS3M4O6M_vH1) | ![Screenshot 5](https://drive.google.com/uc?id=1Qwwum975TUXllmt0M73Rj2oGCCpIFs59) | ![Screenshot 6](https://drive.google.com/uc?id=1QliOENSbuy_s4UYf0LNEQDgoCBAaKwfh) |
+
+| Screenshot 7 | Screenshot 8 | Screenshot 9 |
+|--------------|--------------|--------------|
+| ![Screenshot 7](https://drive.google.com/uc?id=1QodIoVsQfH6EqHI0NubEsAKEOqny66ge) | ![Screenshot 8](https://drive.google.com/uc?id=1QwjpLrRGo0rcyxY36vaZDE0EkJC_QJXz) | ![Screenshot 9](https://drive.google.com/uc?id=1yZGwu1JLB5BapGZOE0PAcs6wbYuy8YbM) |
+
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
