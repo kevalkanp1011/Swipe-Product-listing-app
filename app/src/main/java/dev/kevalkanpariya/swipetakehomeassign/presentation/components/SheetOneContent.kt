@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,83 +26,113 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.kevalkanpariya.swipetakehomeassign.presentation.BottomSheetActionState
-import dev.kevalkanpariya.swipetakehomeassign.presentation.BottomSheetId
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetActionState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetId
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.ProductTypeState
 import dev.kevalkanpariya.swipetakehomeassign.ui.theme.mierFontFamily
 
 @Composable
 fun SheetOneContent(
+    productTypeChooseError: String,
     productTypeStateList: List<ProductTypeState>,
     onProductTypeSelected: (String, Boolean) -> Unit,
     onManageBottomSheet:(BottomSheetId, BottomSheetActionState) -> Unit,
 ) {
 
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(14.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+    Column(
+        modifier = Modifier.padding(14.dp)
     ) {
 
-        items(
-            items = productTypeStateList,
-            key = {it.id}
-        ) { productTypeState ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable() {
-                        onProductTypeSelected(productTypeState.id, !productTypeState.isSelected)
-                    }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Checkbox(
-                    modifier = Modifier.size(15.dp),
-                    checked = productTypeState.isSelected,
-                    colors = CheckboxDefaults.colors(checkedColor = Color(0xff5f00d3)),
-                    onCheckedChange = {
-                        onProductTypeSelected(productTypeState.id, it)
-                    }
-                )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.88f),
+            contentPadding = PaddingValues(0.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
 
-                Text(
-                    text = productTypeState.type,
-                    style = TextStyle(
-                        fontFamily = mierFontFamily,
-                        fontWeight = if(productTypeState.isSelected) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = 12.sp
-                    )
-                )
-            }
-        }
-
-        item {
-            Column() {
-                HorizontalDivider()
-                Spacer(Modifier.height(5.dp))
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        onManageBottomSheet(BottomSheetId.SHEET_TWO, BottomSheetActionState.OPEN)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5f00d3)),
-                    shape = RoundedCornerShape(5.dp)
+            items(
+                items = productTypeStateList,
+                key = {it.id}
+            ) { productTypeState ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable() {
+                            onProductTypeSelected(productTypeState.id, !productTypeState.isSelected)
+                        }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    Checkbox(
+                        modifier = Modifier.size(15.dp),
+                        checked = productTypeState.isSelected,
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xff5f00d3),
+                            uncheckedColor = Color.Black.copy(0.6f),
+                            checkmarkColor = Color.White
+                        ),
+                        onCheckedChange = {
+                            onProductTypeSelected(productTypeState.id, it)
+                        }
+                    )
+
                     Text(
-                        text = "Next",
+                        text = productTypeState.type,
                         style = TextStyle(
                             fontFamily = mierFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontWeight = if(productTypeState.isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = Color.Black
                         )
                     )
                 }
             }
+
+
         }
 
+        HorizontalDivider()
+        if (productTypeChooseError.isNotBlank()) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = productTypeChooseError,
+                style = TextStyle(
+                    fontFamily = mierFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center
+                )
+            )
+            Spacer(Modifier.height(5.dp))
+        } else {
+            Spacer(Modifier.height(8.dp))
+        }
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                onManageBottomSheet(BottomSheetId.SHEET_TWO, BottomSheetActionState.OPEN)
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5f00d3)),
+            shape = RoundedCornerShape(5.dp)
+        ) {
+            Text(
+                text = "Next",
+                style = TextStyle(
+                    fontFamily = mierFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
+            )
+        }
     }
+
+
 }

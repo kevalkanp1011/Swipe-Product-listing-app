@@ -38,6 +38,31 @@ class ProductRepoImpl(
         return dao.getProducts(query)
     }
 
+    override suspend fun isProductExist(productName: String): Result<Boolean, RootError> {
+        return try {
+
+            val isProductExist = dao.isProductExist(productName)
+
+            Result.Success(isProductExist)
+
+        } catch (e: ClientRequestException) {
+            e.printStackTrace()
+            handleHttpResponseException(e)
+        } catch (e: ServerResponseException) {
+            e.printStackTrace()
+            handleHttpResponseException(e)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Result.Error(DataError.Network.SERVER_ERROR)
+        } catch (e: SerializationException) {
+            e.printStackTrace()
+            Result.Error(DataError.Network.SERIALIZATION)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.Error(DataError.Network.UNKNOWN)
+        }
+    }
+
     override suspend fun addProduct(
         productType: String,
         productName: String,
@@ -56,7 +81,7 @@ class ProductRepoImpl(
                             append("product_type", productType)
                             append("price", productPrice)
                             append("tax", productTaxRate)
-                            append("files", file.readBytes(), Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"") })
+                            append("files[]", file.readBytes(), Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"") })
                         }
                     )
                 )
@@ -102,6 +127,14 @@ class ProductRepoImpl(
 
             dao.insertProducts(localProducts)
 
+        } catch (e: ClientRequestException) {
+            e.printStackTrace()
+        } catch (e: ServerResponseException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } catch (e: SerializationException) {
+            e.printStackTrace()
         } catch (e: Exception) {
             e.printStackTrace()
         }

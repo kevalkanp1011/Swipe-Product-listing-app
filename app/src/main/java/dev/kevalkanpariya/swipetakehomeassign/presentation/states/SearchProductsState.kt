@@ -1,4 +1,4 @@
-package dev.kevalkanpariya.swipetakehomeassign.presentation.components
+package dev.kevalkanpariya.swipetakehomeassign.presentation.states
 
 data class SearchProductsState(
     val searchQuery: String = "",

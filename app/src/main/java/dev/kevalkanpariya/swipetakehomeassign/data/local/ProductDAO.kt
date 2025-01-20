@@ -10,8 +10,7 @@ import androidx.room.Query
 @Dao
 interface ProductDAO {
 
-
-    @Query("SELECT * FROM product WHERE productName LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM product WHERE productName LIKE '%' || :query || '%' ORDER BY lastUpdated DESC")
     fun getProducts(query: String): PagingSource<Int, Product>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -20,4 +19,7 @@ interface ProductDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProducts(remoteProducts: List<Product>)
 
+    @Query("SELECT EXISTS(SELECT 1 FROM product WHERE productName = :productName)")
+    suspend fun isProductExist(productName: String): Boolean
 }
+

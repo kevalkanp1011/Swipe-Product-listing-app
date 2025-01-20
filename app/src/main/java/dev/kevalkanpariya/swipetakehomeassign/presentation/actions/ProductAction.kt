@@ -1,4 +1,4 @@
-package dev.kevalkanpariya.swipetakehomeassign.presentation
+package dev.kevalkanpariya.swipetakehomeassign.presentation.actions
 
 import android.content.Context
 import android.net.Uri
@@ -6,7 +6,9 @@ import kotlinx.coroutines.CoroutineScope
 
 sealed interface ProductUiAction {
 
-    data class OnManageBottomSheet(val scope: CoroutineScope, val bottomSheetId: BottomSheetId, val bottomSheetActionState: BottomSheetActionState): ProductUiAction
+    data class OnManageBottomSheet(val scope: CoroutineScope, val bottomSheetId: BottomSheetId, val bottomSheetActionState: BottomSheetActionState):
+        ProductUiAction
+    data class OnResetStates(val bottomSheetId: BottomSheetId): ProductUiAction
     data class OnSearchTextChange(val text: String): ProductUiAction
     data class OnActiveSearchChange(val isActiveSearch: Boolean): ProductUiAction
 
@@ -22,9 +24,11 @@ sealed interface ProductUiAction {
 
     data class OnPhotoUriChanged(val uri: Uri): ProductUiAction
 
-    data class OnDone(val context: Context, val scope: CoroutineScope): ProductUiAction
+    data class OnBottomSheetThreeDone(val context: Context, val scope: CoroutineScope): ProductUiAction
 
     data class OnBottomSheetTwoNext(val scope: CoroutineScope): ProductUiAction
+
+    data class OnBottomSheetOneNext(val scope: CoroutineScope): ProductUiAction
 }
 
 enum class BottomSheetActionState{

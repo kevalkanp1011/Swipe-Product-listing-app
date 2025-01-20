@@ -29,6 +29,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,21 +57,24 @@ import dev.kevalkanpariya.swipetakehomeassign.utils.getUriForFile
 
 @Composable
 fun SheetThreeContent(
+    productCreateError: String,
     isProductCreating: Boolean,
     photoUri: Uri,
     onImageUriChanged:(Uri) -> Unit,
     onDone: () -> Unit
 ) {
 
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
     val context = LocalContext.current
     val photoFile = remember { createTempImageFile(context) }
     val mUri = getUriForFile(context, photoFile)
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+
     val takePictureLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             if (mUri != Uri.EMPTY) {
-                Log.d("AheetThree", "mUri is: $mUri and photoUri is:$photoUri")
-                context.contentResolver.openInputStream(mUri)?.use { inputStream -> bitmap = BitmapFactory.decodeStream(inputStream)}
+                onImageUriChanged(getUriForFile(context, photoFile))
             }
         }
 
@@ -79,9 +83,18 @@ fun SheetThreeContent(
     val getContentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             onImageUriChanged(it)
-            context.contentResolver.openInputStream(it)?.use { inputStream -> bitmap = BitmapFactory.decodeStream(inputStream)}
         }
     }
+
+    LaunchedEffect(photoUri) {
+        if (photoUri == Uri.EMPTY) {
+            bitmap = null
+        } else {
+            context.contentResolver.openInputStream(photoUri)?.use { inputStream -> bitmap = BitmapFactory.decodeStream(inputStream)}
+        }
+
+    }
+
 
     Box(
         Modifier.fillMaxSize()
@@ -187,8 +200,6 @@ fun SheetThreeContent(
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-
-                        onImageUriChanged(getUriForFile(context, photoFile))
                         takePictureLauncher.launch(getUriForFile(context, photoFile))
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5f00d3).copy(0.1f)),
@@ -216,6 +227,19 @@ fun SheetThreeContent(
 
 
             ) {
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    text = productCreateError,
+                    style = TextStyle(
+                        fontFamily = mierFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp,
+                        color = Color.Red,
+                        textAlign = TextAlign.Center
+                    )
+                )
                 HorizontalDivider()
                 Spacer(Modifier.height(5.dp))
                 Button(
@@ -225,7 +249,7 @@ fun SheetThreeContent(
                     onClick = {
                         onDone()
                     },
-                    enabled = !isProductCreating,
+                    enabled = isProductCreating == false,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xff5f00d3)),
                     shape = RoundedCornerShape(5.dp)
                 ) {
@@ -234,7 +258,8 @@ fun SheetThreeContent(
                         style = TextStyle(
                             fontFamily = mierFontFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = Color.White
                         )
                     )
                 }

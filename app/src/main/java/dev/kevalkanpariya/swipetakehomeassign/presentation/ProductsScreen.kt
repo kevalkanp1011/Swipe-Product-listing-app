@@ -2,44 +2,31 @@ package dev.kevalkanpariya.swipetakehomeassign.presentation
 
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
@@ -52,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastForEach
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.paging.LoadState
@@ -63,67 +49,42 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import dev.kevalkanpariya.swipetakehomeassign.R
 import dev.kevalkanpariya.swipetakehomeassign.data.local.Product
-import dev.kevalkanpariya.swipetakehomeassign.presentation.components.SearchBar
-import dev.kevalkanpariya.swipetakehomeassign.presentation.components.SearchBarDefaults
-import dev.kevalkanpariya.swipetakehomeassign.presentation.components.SearchProductsState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetActionState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetId
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.AddProductState
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.ProductTypeState
 import dev.kevalkanpariya.swipetakehomeassign.ui.theme.mierFontFamily
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductsScreen(
     modifier: Modifier = Modifier,
     productPagingItems: LazyPagingItems<Product>,
     addProductState: AddProductState,
-    searchProductsState: SearchProductsState,
     productTypeStateList: List<ProductTypeState>,
     onProductTypeSelected: (String, Boolean) -> Unit,
-    onSearchQueryChange: (String) -> Unit,
-    onActiveSearchChange: (Boolean) -> Unit,
-    onSearch: () -> Unit,
     onManageBottomSheet: (BottomSheetId, BottomSheetActionState) -> Unit,
     onProductPriceChanged: (String) -> Unit,
     onProductTitleChanged: (String) -> Unit,
     onProductTaxRateChanged: (String) -> Unit,
     onPhotoUriSelected: (Uri) -> Unit,
     onDone: () -> Unit,
-
+    onResetStates: (BottomSheetId) -> Unit,
+    isConnectedToInternet: Boolean
 ) {
 
 
+
+
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            ,
     ) {
 
-        when(productPagingItems.loadState.refresh) {
-            is LoadState.Error -> {
-                Text(
-                    modifier = Modifier
-                        .align(Alignment.Center),
-                    text = "Failed to Load Products..",
-                    style = TextStyle(
-                        fontFamily = mierFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp
-                    )
-                )
-            }
-            is LoadState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .align(Alignment.Center)
-                )
-            }
-            else -> Unit
-        }
-
-
         LazyVerticalGrid(
-            modifier = modifier.then(
-                Modifier.padding(top = 60.dp, start = 10.dp, end = 10.dp, bottom = 10.dp)
-            ),
+            modifier = modifier.padding(start = 10.dp, top = 10.dp, end = 10.dp),
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -140,7 +101,7 @@ fun ProductsScreen(
             }
 
             item {
-                when(productPagingItems.loadState.append) {
+                when (productPagingItems.loadState.append) {
                     is LoadState.Error -> {
                         Text(
                             modifier = Modifier
@@ -154,6 +115,7 @@ fun ProductsScreen(
                             )
                         )
                     }
+
                     is LoadState.Loading -> {
                         CircularProgressIndicator(
                             modifier = Modifier
@@ -161,6 +123,7 @@ fun ProductsScreen(
                                 .align(Alignment.Center)
                         )
                     }
+
                     else -> Unit
                 }
             }
@@ -169,144 +132,80 @@ fun ProductsScreen(
         }
 
 
-
-
-        val interactionSource = remember { MutableInteractionSource() }
-        val focusRequester = remember { FocusRequester() }
-
-        SearchBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 10.dp)
-                .align(Alignment.TopCenter)
-                .focusRequester(focusRequester)
-                .focusable(interactionSource = interactionSource)
-            ,
-            shape = RoundedCornerShape(12.dp),
-            colors = SearchBarDefaults.colors(
-                dividerColor = Color.Black,
-                containerColor = Color.White
-            ),
-            query = searchProductsState.searchQuery,
-            onQueryChange = {
-                onSearchQueryChange(it)
-            },
-            onSearch = {
-                onSearch()
-            },
-            active = searchProductsState.isActiveSearch,
-            onActiveChange = onActiveSearchChange,
-            enabled = true,
-            placeholder = {
-                Text(
-                    text = "Search....",
-                    fontSize = 12.sp
-                )
-            },
-            interactionSource = interactionSource,
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "search")
-            },
-            trailingIcon = {
-
-                if (searchProductsState.isActiveSearch) {
-                    IconButton(onClick = {
-                        if (searchProductsState.searchQuery.isNotEmpty()) {
-                            onSearchQueryChange("")
-                        } else {
-                            onSearch()
-                            onActiveSearchChange(false)
-                        }
-                    }) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "clear")
-                    }
-                }
-
-
-            },
-            onAddProduct = {
-                onManageBottomSheet(BottomSheetId.SHEET_ONE, BottomSheetActionState.OPEN)
-            }
-
-            ) {
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 14.dp, top = 14.dp)
-            ) {
-
-                Text(
-                    text = "Recent searches",
-                    style = TextStyle(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-
-                Spacer(Modifier.height(15.dp))
-
-
-
-                searchProductsState.searchProductHistories.fastForEach {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) {
-                                focusRequester.requestFocus()
-                                onSearchQueryChange(it)
-                                onSearch()
-
-                            }
-                            .padding(vertical = 5.dp)
-                           ,
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-
-                        Icon(
-                            painter = painterResource(R.drawable.baseline_history_24),
-                            contentDescription = "history_icon"
-                        )
-                        Text(
-                            text = it,
-                            style = TextStyle()
-                        )
-
-                    }
-                }
-
-            }
-
-
-        }
-
-
-
-
         AddProductScreen(
             addProductState = addProductState,
-            onManageBottomSheet = {bottomSheetId, bottomSheetActionState ->
-                onManageBottomSheet(bottomSheetId, bottomSheetActionState)
-
-            },
+            onManageBottomSheet = onManageBottomSheet,
             productTypeStateList = productTypeStateList,
             onProductTypeSelected = onProductTypeSelected,
             onProductPriceChanged = onProductPriceChanged,
             onProductTitleChanged = onProductTitleChanged,
             onProductTaxRateChanged = onProductTaxRateChanged,
             onPhotoUriSelected = onPhotoUriSelected,
-            onDone = onDone
+            onDone = onDone,
+            onResetStates = onResetStates
 
         )
 
+        when (productPagingItems.loadState.refresh) {
+            is LoadState.Error -> {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    text = "Failed to Load Products..",
+                    style = TextStyle(
+                        fontFamily = mierFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 25.sp
+                    )
+                )
+            }
+
+            is LoadState.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.Center)
+                )
+            }
+
+            else -> Unit
+        }
+
+
+        if (!isConnectedToInternet && productPagingItems.itemSnapshotList.items.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Image(
+                    modifier = Modifier.size(300.dp),
+                    painter = painterResource(R.drawable.no_internet),
+                    contentDescription = "no internet"
+                )
+
+                Text(
+                    text = "Your network seems to be down",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mierFontFamily,
+                        fontSize = 22.sp
+                    )
+                )
+                Text(
+                    text = "Please check your internet connection",
+                    style = TextStyle(
+                        fontFamily = mierFontFamily,
+                        fontSize = 15.sp
+                    )
+                )
+            }
+        }
+
 
     }
-
-
-
 
 
 }
@@ -370,6 +269,7 @@ fun ProductItem(
                         fontSize = 12.sp,
                         fontFamily = mierFontFamily,
                         fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
                     ),
                     maxLines = 1, // Limit to one line
                     overflow = TextOverflow.Ellipsis, // Show ellipsis if text overflows
@@ -380,7 +280,8 @@ fun ProductItem(
                     style = TextStyle(
                         fontSize = 15.sp,
                         fontFamily = mierFontFamily,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     ),
                 )
 
@@ -389,7 +290,8 @@ fun ProductItem(
                     text = "${formatTax(product.tax)}% tax", // Call formatTax function
                     style = TextStyle(
                         fontFamily = mierFontFamily,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        color = Color.Black
                     ),
                 )
             }

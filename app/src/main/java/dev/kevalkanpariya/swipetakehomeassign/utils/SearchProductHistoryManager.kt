@@ -1,6 +1,5 @@
 package dev.kevalkanpariya.swipetakehomeassign.utils
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.appsearch.app.AppSearchSession
 import androidx.appsearch.app.PutDocumentsRequest
@@ -17,13 +16,13 @@ class SearchProductHistoryManager(
 ) {
     private var session:AppSearchSession?=null
 
-    @SuppressLint("NewApi")
+
     suspend fun init(){
         withContext(Dispatchers.IO){
             val sessionFuture= LocalStorage.createSearchSessionAsync(
                 LocalStorage.SearchContext.Builder(
                     appContext,
-                    "SEARCH_MEET_DB"
+                    "SEARCH_PRODUCT_DB"
                 ).build()
             )
             val setSchemaRequest = SetSchemaRequest.Builder()

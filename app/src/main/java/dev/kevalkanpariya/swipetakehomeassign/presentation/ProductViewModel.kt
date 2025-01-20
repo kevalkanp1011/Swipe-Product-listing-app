@@ -1,5 +1,6 @@
 package dev.kevalkanpariya.swipetakehomeassign.presentation
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
@@ -9,14 +10,22 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.dokar.sheets.BottomSheetState
+import com.dokar.sheets.BottomSheetValue
 import dev.kevalkanpariya.swipetakehomeassign.data.appsearch.SearchProductHistory
 import dev.kevalkanpariya.swipetakehomeassign.domain.repository.ProductRepository
 import dev.kevalkanpariya.swipetakehomeassign.domain.utils.handleResult
-import dev.kevalkanpariya.swipetakehomeassign.presentation.components.SearchProductsState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetActionState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetId
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.ProductUiAction
+import dev.kevalkanpariya.swipetakehomeassign.presentation.states.SearchProductsState
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.AddProductState
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.ProductTypeState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.states.TextFieldState
+import dev.kevalkanpariya.swipetakehomeassign.utils.ConnectivityObserver
 import dev.kevalkanpariya.swipetakehomeassign.utils.SearchProductHistoryManager
 import dev.kevalkanpariya.swipetakehomeassign.utils.createFileFromInputStream
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,7 +45,8 @@ import java.util.UUID
 
 class ProductViewModel(
     private val searchProductHistoryManager: SearchProductHistoryManager,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
 
@@ -48,6 +58,14 @@ class ProductViewModel(
 
     private val _productTypeStateList = MutableStateFlow(listOf(ProductTypeState()))
     val productTypeStateList = _productTypeStateList.asStateFlow()
+
+    val isConnectedToInternet = connectivityObserver
+        .isConnected
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            false
+        )
 
     private val _snackbarEventFlow = MutableSharedFlow<String>()
     val snackbarEventFlow = _snackbarEventFlow.asSharedFlow()
@@ -81,6 +99,21 @@ class ProductViewModel(
         viewModelScope.launch {
             refreshProducts()
             searchProductHistoryManager.init()
+
+            _addProductState.update { state ->
+                state.copy(
+                    bottomSheetOneState = BottomSheetState(
+                        confirmValueChange = {
+                            if (it == BottomSheetValue.Collapsed) {
+                                resetStates(BottomSheetId.SHEET_ONE)
+                                true
+                            } else {
+                                true
+                            }
+                        }
+                    )
+                )
+            }
 
             _productTypeStateList.update {
                 productTypeList.map {
@@ -151,9 +184,10 @@ class ProductViewModel(
                 val productType = productTypeStateList.value.fastFirstOrNull { it.id == action.id }?.type
                 productType?.let {
                     _addProductState.update { state ->
-                        state.copy(productType = productType)
+                        state.copy(productType = if (action.isSelected) productType else "")
                     }
                 }
+
 
             }
             is ProductUiAction.OnProductPriceChanged -> _addProductState.update { state ->
@@ -168,55 +202,55 @@ class ProductViewModel(
             is ProductUiAction.OnPhotoUriChanged -> _addProductState.update { state ->
                 state.copy(photoUri = action.uri)
             }
-            is ProductUiAction.OnDone -> {
+
+            is ProductUiAction.OnManageBottomSheet -> {
+                action.scope.launch {
+                    when (action.bottomSheetActionState) {
+                        BottomSheetActionState.CLOSE -> {
+                            collapseBottomSheet(action.bottomSheetId)
+                        }
+                        BottomSheetActionState.OPEN -> {
+                            expandBottomSheet(action.bottomSheetId)
+                        }
+                    }
+                }
+            }
+
+            is ProductUiAction.OnResetStates -> {
+                resetStates(action.bottomSheetId)
+            }
+
+            is ProductUiAction.OnBottomSheetThreeDone -> {
                 viewModelScope.launch {
                     _addProductState.update { state ->
                         state.copy(isProductCreating = true)
                     }
 
-                    productRepository.addProduct(
-                        productType = addProductState.value.productType,
-                        productName = addProductState.value.productName.text,
-                        productPrice = addProductState.value.price.text.toDouble(),
-                        productTaxRate = addProductState.value.taxRate.text.toDouble(),
-                        file = createFileFromInputStream(action.context, addProductState.value.photoUri)
-                    ).handleResult(
-                        onSuccess = {
-                            _snackbarEventFlow.emit("Product added Successfully!")
-                            _addProductState.update { state ->
-                                state.copy(isProductCreating = false)
-                            }
+                    if (addProductState.value.photoUri == Uri.EMPTY) {
+                        _addProductState.update { state ->
+                            state.copy(productCreateError = "please upload photo")
+                        }
+                    }
 
-                            _productTypeStateList.update { state ->
-                                state.map {
-                                    if (it.isSelected) {
-                                        it.copy(isSelected = false)
-                                    } else {
-                                        it
-                                    }
+                    // Check if product already exists
+                    productRepository.isProductExist(addProductState.value.productName.text).handleResult(
+                        onSuccess = { productExists ->
+                            if (productExists == false) {
+                                addNewProduct(action.context, action.scope)
+                            } else {
+                                _addProductState.update { state ->
+                                    state.copy(isProductCreating = false, productCreateError = "Product with provided name and type already exists!")
                                 }
-                            }
-                            _addProductState.update { state ->
-                                state.copy(
-                                    productName = state.productName.copy(text = ""),
-                                    productType = "",
-                                    price = state.price.copy(text = ""),
-                                    taxRate = state.taxRate.copy(text = ""),
-                                    photoUri = Uri.EMPTY
-                                )
-                            }
-
-                            BottomSheetId.entries.reversed().fastForEach {
-                                onAction(ProductUiAction.OnManageBottomSheet(action.scope, it, BottomSheetActionState.CLOSE))
                             }
                         },
                         onError = { error ->
-                            _snackbarEventFlow.emit("Product add failed!: ${error.toString()}")
                             _addProductState.update { state ->
-                                state.copy(isProductCreating = false)
+                                state.copy(isProductCreating = false, productCreateError = "Product add failed!: ${error.toString()}")
                             }
+
                         }
                     )
+
                 }
 
             }
@@ -243,21 +277,26 @@ class ProductViewModel(
                     )
                 }
                 if (isValid) {
-                    onAction(ProductUiAction.OnManageBottomSheet(action.scope, BottomSheetId.SHEET_THREE, BottomSheetActionState.OPEN))
+                    onManageBottomSheet(action.scope, BottomSheetId.SHEET_THREE, BottomSheetActionState.OPEN)
                 }
             }
-            is ProductUiAction.OnManageBottomSheet -> {
-                action.scope.launch {
-                    when (action.bottomSheetActionState) {
-                        BottomSheetActionState.CLOSE -> {
-                            collapseBottomSheet(action.bottomSheetId)
+            is ProductUiAction.OnBottomSheetOneNext -> {
+                var isValid = true
+                _addProductState.update { addProductState ->
+                    addProductState.copy(
+                        productTypeChooseError = if (addProductState.productType.isBlank()) {
+                            isValid = false
+                            "please choose product type to proceed"
+                        } else {
+                            ""
                         }
-                        BottomSheetActionState.OPEN -> {
-                            expandBottomSheet(action.bottomSheetId)
-                        }
-                    }
+                    )
+                }
+                if (isValid) {
+                    onManageBottomSheet(action.scope, BottomSheetId.SHEET_TWO, BottomSheetActionState.OPEN)
                 }
             }
+
         }
     }
 
@@ -266,6 +305,76 @@ class ProductViewModel(
             productRepository.refreshProducts()
         }
     }
+
+
+    private fun onManageBottomSheet(
+        scope: CoroutineScope,
+        bottomSheetId: BottomSheetId,
+        bottomSheetActionState: BottomSheetActionState
+    ) {
+        scope.launch {
+            when (bottomSheetActionState) {
+                BottomSheetActionState.CLOSE -> {
+                    collapseBottomSheet(bottomSheetId)
+                }
+                BottomSheetActionState.OPEN -> {
+                    expandBottomSheet(bottomSheetId)
+                }
+            }
+        }
+    }
+
+
+    // Function to add a new product
+    private suspend fun addNewProduct(context: Context, scope: CoroutineScope) {
+
+        productRepository.addProduct(
+            productType = addProductState.value.productType,
+            productName = addProductState.value.productName.text,
+            productPrice = addProductState.value.price.text.toDouble(),
+            productTaxRate = addProductState.value.taxRate.text.toDouble(),
+            file = createFileFromInputStream(context, addProductState.value.photoUri)
+        ).handleResult(
+            onSuccess = {
+                _productTypeStateList.update { state ->
+                    state.map {
+                        if (it.isSelected) {
+                            it.copy(isSelected = false)
+                        } else {
+                            it
+                        }
+                    }
+                }
+                _addProductState.update { state ->
+                    state.copy(
+                        productName = TextFieldState(),
+                        productType = "",
+                        price = TextFieldState(),
+                        taxRate = TextFieldState(),
+                        photoUri = Uri.EMPTY,
+                        productCreateError = "",
+                        isProductCreating = false
+                    )
+                }
+
+                BottomSheetId.entries.reversed().fastForEach {
+                    onAction(ProductUiAction.OnManageBottomSheet(scope, it, BottomSheetActionState.CLOSE))
+                }
+
+                _snackbarEventFlow.emit("Product added Successfully!")
+            },
+            onError = { error ->
+                _snackbarEventFlow.emit("Product add failed!: ${error.toString()}")
+                _addProductState.update { state ->
+                    state.copy(isProductCreating = false)
+                }
+            }
+        )
+    }
+
+
+
+
 
     private suspend fun collapseBottomSheet(sheetId: BottomSheetId) {
         when (sheetId) {
@@ -307,6 +416,35 @@ class ProductViewModel(
                 _addProductState.value.bottomSheetTwoState.expand()
             }
             BottomSheetId.SHEET_THREE -> _addProductState.value.bottomSheetThreeState.expand()
+        }
+    }
+
+    private fun resetStates(sheetId: BottomSheetId) {
+        when(sheetId) {
+            BottomSheetId.SHEET_ONE -> {_addProductState.update { state ->
+                _productTypeStateList.update { stateList ->
+                    stateList.map {
+                        it.copy(isSelected = false)
+                    }
+                }
+                state.copy(
+                    productType = "",
+                    productName = TextFieldState(),
+                    price = TextFieldState(),
+                    taxRate = TextFieldState(),
+                    photoUri = Uri.EMPTY,
+                    productCreateError = ""
+                )
+            }
+            }
+            BottomSheetId.SHEET_TWO -> _addProductState.update { it.copy(
+                productName = TextFieldState(),
+                price = TextFieldState(),
+                taxRate = TextFieldState()
+            ) }
+            BottomSheetId.SHEET_THREE -> _addProductState.update {
+                it.copy(photoUri = Uri.EMPTY, productCreateError = "")
+            }
         }
     }
 

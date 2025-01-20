@@ -10,6 +10,8 @@ interface ProductRepository {
 
     fun getProducts(query: String): PagingSource<Int, Product>
 
+    suspend fun isProductExist(productName: String): Result<Boolean, RootError>
+
 
     suspend fun addProduct(
         productType: String,

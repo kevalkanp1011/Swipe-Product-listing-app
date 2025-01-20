@@ -12,7 +12,9 @@ data class AddProductState(
     val price: TextFieldState = TextFieldState(),
     val taxRate: TextFieldState = TextFieldState(),
     val photoUri: Uri = Uri.EMPTY,
-    val isProductCreating: Boolean =false
+    val isProductCreating: Boolean =false,
+    val productCreateError:String = "",
+    val productTypeChooseError: String = ""
 )
 
 

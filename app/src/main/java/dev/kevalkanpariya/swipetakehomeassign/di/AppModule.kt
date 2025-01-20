@@ -6,6 +6,8 @@ import dev.kevalkanpariya.swipetakehomeassign.data.local.ProductDatabase
 import dev.kevalkanpariya.swipetakehomeassign.data.repoImpl.ProductRepoImpl
 import dev.kevalkanpariya.swipetakehomeassign.domain.repository.ProductRepository
 import dev.kevalkanpariya.swipetakehomeassign.presentation.ProductViewModel
+import dev.kevalkanpariya.swipetakehomeassign.utils.AndroidConnectivityObserver
+import dev.kevalkanpariya.swipetakehomeassign.utils.ConnectivityObserver
 import dev.kevalkanpariya.swipetakehomeassign.utils.SearchProductHistoryManager
 import dev.kevalkanpariya.swipetakehomeassign.utils.ktorOKHTTPClient
 import io.ktor.client.HttpClient
@@ -31,6 +33,7 @@ val appModule = module {
 
     single<ProductRepository> { ProductRepoImpl(get(), get())}
 
+    single<ConnectivityObserver> { AndroidConnectivityObserver(get()) }
 
     viewModelOf(::ProductViewModel)
 

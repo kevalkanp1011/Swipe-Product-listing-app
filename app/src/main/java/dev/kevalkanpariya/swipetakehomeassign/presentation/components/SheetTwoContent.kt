@@ -28,8 +28,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.kevalkanpariya.swipetakehomeassign.presentation.BottomSheetActionState
-import dev.kevalkanpariya.swipetakehomeassign.presentation.BottomSheetId
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetActionState
+import dev.kevalkanpariya.swipetakehomeassign.presentation.actions.BottomSheetId
 import dev.kevalkanpariya.swipetakehomeassign.presentation.states.TextFieldState
 import dev.kevalkanpariya.swipetakehomeassign.ui.theme.mierFontFamily
 import dev.kevalkanpariya.swipetakehomeassign.utils.DecimalFormatter
@@ -61,7 +61,8 @@ fun SheetTwoContent(
                     style = TextStyle(
                         fontFamily = mierFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.Black
                     )
                 )
                 Spacer(Modifier.height(5.dp))
@@ -79,7 +80,7 @@ fun SheetTwoContent(
                                 color = Color.Black.copy(0.4f),
                                 fontFamily = mierFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 15.sp
+                                fontSize = 15.sp,
 
                             )
                         )
@@ -88,6 +89,12 @@ fun SheetTwoContent(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        unfocusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        focusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        cursorColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+
                     )
                 )
                 productTitle.error?.let {
@@ -109,7 +116,8 @@ fun SheetTwoContent(
                     style = TextStyle(
                         fontFamily = mierFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.Black
                     )
                 )
 
@@ -136,6 +144,12 @@ fun SheetTwoContent(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        unfocusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        focusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        cursorColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+
                     ),
                     visualTransformation = DecimalInputVisualTransformation(decimalFormatter)
 
@@ -159,7 +173,8 @@ fun SheetTwoContent(
                     style = TextStyle(
                         fontFamily = mierFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.Black
                     )
                 )
                 Spacer(Modifier.height(5.dp))
@@ -189,6 +204,11 @@ fun SheetTwoContent(
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        unfocusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        focusedContainerColor = Color(0xFF3F0085).copy(0.05f),
+                        cursorColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     visualTransformation = DecimalInputVisualTransformation(decimalFormatter)
 
@@ -228,7 +248,8 @@ fun SheetTwoContent(
                     style = TextStyle(
                         fontFamily = mierFontFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = Color.White
                     )
                 )
             }
