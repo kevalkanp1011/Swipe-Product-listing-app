@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Swipe Take Home Assign"
 include(":app")
+include(":baselineprofile")
